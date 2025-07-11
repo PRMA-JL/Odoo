@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="event_registration_template_inherit" inherit_id="website_event.registration_template">
+        
+        <!-- Cacher le bloc "Tickets" -->
+        <xpath expr="//div[contains(@class, 'd-flex') and contains(@class, 'flex-wrap') and contains(@class, 'justify-content-between')]" position="attributes">
+            <attribute name="t-if">not (event.seats_limited and event.seats_max == 0)</attribute>
+        </xpath>
+
+        <!-- Cacher aussi le bouton "S'inscrire" -->
+        <xpath expr="//button[@data-bs-target='#modal_ticket_registration']" position="attributes">
+            <attribute name="t-if">not (event.seats_limited and event.seats_max == 0)</attribute>
+        </xpath>
+
+    </template>
+</odoo>
