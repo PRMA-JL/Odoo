@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Extension des options du snippet "s_blog_posts" -->
+    <template id="s_blog_posts_options_custom" inherit_id="website_blog.s_dynamic_snippet_options_template">
+        <xpath expr="//we-select[@data-name='blog_opt']" position="after">
+            <!-- Selecteur de tag de blog -->
+            <we-select t-if="snippet_name == 'dynamic_snippet_blog_posts'"
+                       string="Tag"
+                       data-name="tag_opt"
+                       data-attribute-name="filterByBlogTagId"
+                       data-no-preview="true">
+                <we-button data-select-data-attribute="-1">Tous les tags</we-button>
+                <!-- Liste des tags injectée dynamiquement via JS -->
+            </we-select>
+        </xpath>
+    </template>
+</odoo>

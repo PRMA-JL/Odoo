@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="custom_author_display" inherit_id="website_blog.post_author">
+	<!-- Hide capital letter -->
+	<xpath expr="//div[@t-if='blog_post.author_avatar']" position="replace">
+	</xpath>
+
+	<!-- Hide author name -->
+	<xpath expr="//span[@t-if='editable']" position="replace">
+        </xpath>
+	<xpath expr="//span[@t-else]" position="replace">
+	</xpath>
+    </template>
+</odoo>
