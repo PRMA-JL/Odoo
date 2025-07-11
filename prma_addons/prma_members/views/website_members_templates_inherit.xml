@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="custom_members_display" inherit_id="website_membership.index">
+	<!-- Hide left column -->
+        <xpath expr="//div[@id='left_column']" position="replace">
+        </xpath>
+
+        <!-- Adapt content's width -->
+        <xpath expr="//div[@id='ref_content']" position="attributes">
+            <attribute name="class">col-lg-12</attribute>
+        </xpath>
+    </template>
+</odoo>
