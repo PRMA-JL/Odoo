@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 import werkzeug.urls
+import locale
 
 from odoo import fields
 
@@ -30,6 +31,13 @@ class WebsiteMembership(http.Controller):
         '/members/association/<membership_id>/country/<int:country_id>/page/<int:page>',
     ], type='http', auth="public", website=True, sitemap=True)
     def members(self, membership_id=None, country_name=None, country_id=0, page=1, **post):
+        # Set locale for accent-aware sorting (make sure 'fr_FR.UTF-8' is available on your system)
+        try:
+            locale.setlocale(locale.LC_COLLATE, 'fr_FR.UTF-8')
+        except locale.Error:
+            # Fallback locale if fr_FR.UTF-8 is not available
+            locale.setlocale(locale.LC_COLLATE, 'C.UTF-8')
+
         # JL : sudo() for unlogged website user
         Product = request.env['product.product'].sudo()
         Country = request.env['res.country']
@@ -47,7 +55,7 @@ class WebsiteMembership(http.Controller):
         ]
         if membership_id and membership_id != 'free':
             membership_id = int(membership_id)
-            base_line_domain.append(('membership_id', '=', membership_id)) 
+            base_line_domain.append(('membership_id', '=', membership_id))
         if post_name:
             base_line_domain += ['|', ('partner.name', 'ilike', post_name), ('partner.website_description', 'ilike', post_name)]
 
@@ -95,17 +103,24 @@ class WebsiteMembership(http.Controller):
         membership_lines = MembershipLine.sudo()
         # displayed non-free membership lines
         if membership_id != 'free':
-            # Récupérer tous les membres correspondant au domaine, ordonnés par membership_id puis id
+            # Récupérer tous les membres triés par membership_id puis id (pour optimiser)
             all_membership_lines = MembershipLine.sudo().search(line_domain, order="membership_id, id")
             count_members = len(all_membership_lines)
 
-            # Regrouper les membres par type de membership dans l'ordre défini par memberships
             memberships_order = [m.id for m in memberships]
+
+            # Regrouper les lignes par membership_id avec tri alphabétique sensible aux accents sur partner.name en python
+            grouped_dict = {}
+            for m_id in memberships_order:
+                lines_of_type = [line for line in all_membership_lines if line.membership_id.id == m_id]
+                # Tri avec locale.strxfrm pour gérer accents correctement
+                lines_of_type.sort(key=lambda l: locale.strxfrm(l.partner.name) if l.partner else '')
+                grouped_dict[m_id] = lines_of_type
+
             grouped_lines = []
             for m_id in memberships_order:
-                grouped_lines.extend([line for line in all_membership_lines if line.membership_id.id == m_id])
+                grouped_lines.extend(grouped_dict.get(m_id, []))
 
-            # Appliquer la pagination sur la liste groupée
             membership_lines = grouped_lines[offset:offset+limit]
         else:
             # Pour les membres gratuits, garder la logique existante
@@ -113,7 +128,7 @@ class WebsiteMembership(http.Controller):
             if offset <= count_members:
                 membership_lines = MembershipLine.sudo().search(line_domain, offset, limit)
 
-        page_partner_ids = set(m.partner.id for m in membership_lines) 
+        page_partner_ids = set(m.partner.id for m in membership_lines)
         # get google maps localization of partners
         google_map_partner_ids = []
         if request.website.is_view_active('website_membership.opt_index_google_map'):
